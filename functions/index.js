@@ -9,7 +9,6 @@ admin.initializeApp({
 let db = admin.firestore();
 
 let addSwitchStatus = (name, value) => {
-  console.log('addSwitchStatus - name:', name, ', value:', value);
   let model = { name: name, value: value, created: FieldValue.serverTimestamp() };
   return db.collection('switch').add(model)
 };
@@ -33,7 +32,6 @@ exports.getSwitch = functions
 .region('asia-northeast1')
 .https.onRequest((req, res) => {
   const name = req.body.action.params.name;
-  console.log('getSwitch - name:', name)
 
   db.collection('switch')
     .where('name', '==', name)
@@ -49,7 +47,6 @@ exports.getSwitch = functions
       snapshot.forEach((_doc) => {
         doc = _doc;
       })
-      // const doc = snapshot[0];
       if (typeof doc.data()['value'] !== 'boolean') {
         return res.status(500).json({
           error: {
@@ -72,29 +69,12 @@ exports.setSwitch = functions
   const value = req.headers['value'] === 'true'
   addSwitchStatus(name, value)
     .then(_ => {
-      console.log('success - name:', name, ', value:', value);
       const valueText = value ? '켭니다.' : '끕니다.'
       return res.status(200).json(makeSimpleTextJson(`${name} 스위치를 ${valueText}`));
     })
     .catch(err => {
-      console.log('err', err);
       return res.status(500).json({
         error: err
       })
     })
 });
-
-// exports.setSwitchOff = functions
-// .region('asia-northeast1')
-// .https.onRequest((req, res) => {
-//   const name = req.body.action.params.name;
-//   addSwitchStatus(name, true)
-//     .then(res => {
-//       return res.status(200).json(makeSimpleTextJson(`${name} 스위치를 켭니다.`));
-//     })
-//     .catch(err => {
-//       return res.status(500).json({
-//         error: err
-//       })
-//     })
-// });
